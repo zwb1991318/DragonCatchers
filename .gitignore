@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# Xcode（工程由 XcodeGen 生成，不进 git）
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
