@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 # 生成工程、编译，并在 iPhone 模拟器上启动游戏。
-# 用法：scripts/run-sim.sh            （默认 iPhone 15）
-#       DEVICE="iPhone 15 Pro" scripts/run-sim.sh
+# 用法：scripts/run-sim.sh            （默认 iPhone 18 Pro Max）
+#       DEVICE="iPhone 15" scripts/run-sim.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-DEVICE="${DEVICE:-iPhone 15}"
+DEVICE="${DEVICE:-iPhone 18 Pro Max}"
 BUNDLE_ID="com.zwb1991318.DragonCatchers"
 
 # 同名模拟器可能有多个系统版本，选系统版本最新的那个
 UDID="$(xcrun simctl list devices available -j | python3 -c '
-import json, sys
+import json, re, sys
 name = sys.argv[1]
 devices = json.load(sys.stdin)["devices"]
-found = sorted((rt, d["udid"]) for rt, ds in devices.items() if "iOS" in rt for d in ds if d["name"] == name)
+# 按数字比较版本号，避免 iOS-9 排在 iOS-27 后面
+version = lambda rt: tuple(int(n) for n in re.findall(r"\d+", rt))
+found = sorted((version(rt), d["udid"]) for rt, ds in devices.items() if "iOS" in rt for d in ds if d["name"] == name)
 print(found[-1][1] if found else "")
 ' "$DEVICE")"
 if [ -z "$UDID" ]; then
