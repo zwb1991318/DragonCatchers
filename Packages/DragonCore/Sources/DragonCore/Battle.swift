@@ -108,15 +108,38 @@ public struct Battle: Sendable {
 
     // MARK: 推进
 
+    /// 推进一帧。调用方要保证 dt 不为负，并且单帧不要太长（画面层限制在 1/30 秒以内），
+    /// 否则高速飞行的箭可能一帧就穿过龙而没有判定命中。
     public mutating func step(dt: Double) -> [BattleEvent] {
-        guard isPlaying else { return [] }
         var events: [BattleEvent] = []
-        bow.update(dt: dt)
-        spawnDragons(dt: dt)
-        moveDragons(dt: dt, events: &events)
-        moveArrows(dt: dt, events: &events)
-        if wallHP <= 0 {
-            finish(.lost, events: &events)
+        switch outcome {
+        case .won, .lost:
+            return []
+        case .playing:
+            bow.update(dt: dt)
+            spawnDragons(dt: dt)
+            moveDragons(dt: dt, events: &events)
+            moveArrows(dt: dt, events: &events)
+            moveCarcasses(dt: dt, events: &events)
+            moveBoat(dt: dt, events: &events)
+            if wallHP <= 0 {
+                // 失败立即结束，河里和船上没卸货的都不算
+                finish(.lost, events: &events)
+            } else if spawner.isFinished && dragons.isEmpty {
+                // 所有波次出完且龙全部死亡才算胜利；两波之间暂时没龙不算
+                finish(.victoryGrace(remaining: balance.victoryGraceTime), events: &events)
+            }
+        case .victoryGrace(let remaining):
+            moveArrows(dt: dt, events: &events)
+            moveCarcasses(dt: dt, events: &events)
+            moveBoat(dt: dt, events: &events)
+            let left = remaining - dt
+            let nothingLeft = carcasses.isEmpty && boat.cargo.isEmpty
+            if left <= 0 || nothingLeft {
+                finish(.won, events: &events)
+            } else {
+                outcome = .victoryGrace(remaining: left)
+            }
         }
         return events
     }
