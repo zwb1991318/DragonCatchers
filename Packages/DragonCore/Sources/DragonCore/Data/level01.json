@@ -1,0 +1,8 @@
+{
+  "name": "第 1 关",
+  "waves": [
+    { "delay": 2, "groups": [ { "kind": "normal", "count": 3, "interval": 2.5 } ] },
+    { "delay": 3, "groups": [ { "kind": "normal", "count": 5, "interval": 2.0 } ] },
+    { "delay": 3, "groups": [ { "kind": "normal", "count": 8, "interval": 1.4 } ] }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "world": { "width": 960, "height": 440, "gravity": 520, "spawnX": 1010, "spawnMinY": 200, "spawnMaxY": 400 },
+  "bow": {
+    "anchor": { "x": 90, "y": 300 },
+    "grabRadius": 60,
+    "cancelRadius": 20,
+    "maxPull": 130,
+    "launchSpeedPerPoint": 7,
+    "reloadTime": 0.6,
+    "damage": 1
+  },
+  "wall": { "frontX": 130, "topY": 270, "maxHP": 100 },
+  "river": { "surfaceY": 80, "floatY": 60, "flowSpeed": 40, "exitX": 1000 },
+  "boat": { "dockX": 170, "speed": 160, "capacity": 3, "pickupRadius": 24 },
+  "economy": { "incomeMultiplier": 1.0 },
+  "dragons": {
+    "normal": {
+      "maxHP": 2,
+      "speed": 70,
+      "attackRange": 300,
+      "attackDamage": 5,
+      "attackInterval": 2.0,
+      "hitRadius": 28,
+      "value": 10
+    }
+  },
+  "victoryGraceTime": 6
+}

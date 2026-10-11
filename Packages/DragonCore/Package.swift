@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "DragonCore", targets: ["DragonCore"]),
     ],
     targets: [
-        .target(name: "DragonCore"),
+        .target(name: "DragonCore", resources: [.process("Data")]),
         .testTarget(name: "DragonCoreTests", dependencies: ["DragonCore"]),
     ]
 )
