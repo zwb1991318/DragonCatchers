@@ -18,7 +18,10 @@ enum Effects {
     }
 
     static func flash(_ node: SKNode) {
-        node.run(.sequence([.fadeAlpha(to: 0.3, duration: 0.05), .fadeAlpha(to: 1, duration: 0.1)]))
+        // 连续受击时先复位再重播，避免动作叠加
+        node.removeAction(forKey: "flash")
+        node.alpha = 1
+        node.run(.sequence([.fadeAlpha(to: 0.3, duration: 0.05), .fadeAlpha(to: 1, duration: 0.1)]), withKey: "flash")
     }
 
     static func splash(at point: CGPoint, in parent: SKNode) {

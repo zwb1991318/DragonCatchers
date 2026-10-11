@@ -9,6 +9,7 @@ final class GameScene: SKScene {
     private var battle: Battle
     private var lastUpdateTime: TimeInterval?
     private var reportedFinish = false
+    private var aimTouch: UITouch?
 
     private let wallNode: SKShapeNode
     private let archerNode: SKNode
@@ -88,21 +89,28 @@ final class GameScene: SKScene {
     // MARK: 触摸
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-        battle.beginAim(at: Vec2(touch.location(in: self)))
+        // 只有第一根落在弓箭手上的手指控制弓，其余手指一律忽略
+        guard aimTouch == nil, let touch = touches.first else { return }
+        if battle.beginAim(at: Vec2(touch.location(in: self))) {
+            aimTouch = touch
+        }
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
+        guard let touch = aimTouch, touches.contains(touch) else { return }
         battle.moveAim(to: Vec2(touch.location(in: self)))
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = aimTouch, touches.contains(touch) else { return }
         play(battle.endAim())
+        aimTouch = nil
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = aimTouch, touches.contains(touch) else { return }
         battle.cancelAim()
+        aimTouch = nil
     }
 
     // MARK: 画面
@@ -131,13 +139,16 @@ final class GameScene: SKScene {
                     Effects.flash(node)
                 }
             case .dragonAttacked(let id):
-                guard let dragon = battle.dragons.first(where: { $0.id == id }) else { break }
-                let target = CGPoint(x: balance.wall.frontX, y: min(dragon.position.y, balance.wall.topY - 10))
-                Effects.fireball(from: CGPoint(dragon.position), to: target, in: effectsLayer)
+                // 同一帧里喷火后又被射死的龙已不在 battle.dragons 里，所以从节点取位置
+                if let node = dragonLayer.node(for: id) {
+                    let target = CGPoint(x: balance.wall.frontX, y: min(node.position.y, balance.wall.topY - 10))
+                    Effects.fireball(from: node.position, to: target, in: effectsLayer)
+                }
                 Effects.shake(wallNode, home: .zero)
             case .carcassLanded(let id):
-                if let carcass = battle.carcasses.first(where: { $0.id == id }) {
-                    Effects.splash(at: CGPoint(carcass.position), in: effectsLayer)
+                // 落水和被船捞起可能发生在同一帧，所以从节点取位置，找不到就跳过
+                if let node = carcassLayer.node(for: id) {
+                    Effects.splash(at: node.position, in: effectsLayer)
                 }
             case .cargoUnloaded(let income):
                 Effects.floatingText(
