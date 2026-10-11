@@ -108,4 +108,25 @@ struct BattleCombatTests {
         #expect(began == false)
         #expect(battle.summary.won == false)
     }
+
+    // 同一帧最后一只龙被击杀、城墙也归零：算失败，不算胜利
+    @Test func lossWinsTieWithLastKillInSameFrame() {
+        var battle = makeBattle(Fixtures.level([Fixtures.wave(count: 1)]))
+        _ = battle.step(dt: 0.01)
+        battle.dragons = [Dragon(id: 99, kind: "normal", position: Vec2(310, 300), hp: 1, phase: .attacking, attackCooldown: 0)]
+        battle.wallHP = 10
+        battle.arrows = [arrow(50, from: Vec2(300, 300), velocity: Vec2(100, 0))]
+
+        let events = battle.step(dt: 0.1)
+        #expect(events.contains(.dragonKilled(99)))
+        #expect(battle.dragons.isEmpty)
+        #expect(battle.wallHP <= 0)
+        #expect(battle.outcome == .lost)
+        #expect(events.contains(.outcomeChanged(.lost)))
+        let hasGrace = events.contains { event in
+            if case .outcomeChanged(.victoryGrace) = event { return true }
+            return false
+        }
+        #expect(hasGrace == false)
+    }
 }

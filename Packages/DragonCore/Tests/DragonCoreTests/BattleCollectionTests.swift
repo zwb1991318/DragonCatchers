@@ -120,4 +120,34 @@ struct BattleCollectionTests {
         #expect(battle.income == 0)
         #expect(battle.boat.x > 200)
     }
+
+    // 顺路打捞：没装满的船在返航途中出现新目标，会掉头去捞
+    @Test func returningBoatDivertsForANewCarcassWhenNotFull() {
+        var battle = makeBattle()
+        battle.boat = Boat(x: 600, cargo: [10], mode: .returning)
+        _ = battle.step(dt: 0.1)
+        #expect(battle.boat.mode == .returning)
+
+        battle.carcasses.append(floating(9, x: 500))
+        _ = battle.step(dt: 0.1)
+        #expect(battle.boat.mode == .chasing(9))
+    }
+
+    // 失败时船上和河里没卸货的都不算收益
+    @Test func lossDiscardsCargoOnBoardAndInRiver() {
+        var battle = makeBattle()
+        battle.wallHP = 10
+        battle.boat = Boat(x: 600, cargo: [10], mode: .returning)
+        battle.carcasses = [floating(7, x: 800)]
+        battle.dragons = [Dragon(id: 99, kind: "normal", position: Vec2(350, 300), hp: 2, phase: .attacking, attackCooldown: 0)]
+
+        let events = battle.step(dt: 0.1)
+        #expect(events.contains(.outcomeChanged(.lost)))
+        #expect(battle.outcome == .lost)
+        #expect(battle.income == 0)
+
+        let after = battle.step(dt: 0.1)
+        #expect(after.isEmpty)
+        #expect(battle.income == 0)
+    }
 }
